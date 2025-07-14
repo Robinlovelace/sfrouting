@@ -1,0 +1,111 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, eval=FALSE}
+usethis::use_readme_rmd()
+usethis::use_description()
+usethis::use_package("sf")
+usethis::use_package("osmextract", type = "Suggests")
+usethis::use_package("zonebuilder", type = "Suggests")
+devtools::build_readme()
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# sfrouting
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of sfrouting is to enable people to generate routes for reproducible research.
+The package provides an interface between {sfnetworks} and {cppRouting} R packages, taking part of its name from each package: the package takes `sf` and `sfnetworks` objects as inputs, uses routing packages (and functions in this package TBC), and outputs `sf` objects.
+
+A design principle is for `sf` to be the *only* package installed by default when you install this package.
+You will be asked to install additional packages when needed.
+
+## Installation
+
+You can install the development version of sfrouting from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+pak::pak("Robinlovelace/sfrouting")
+```
+
+## Example
+
+Let's do some routing within a city of your choice.
+Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
+
+```{r example}
+# library(sfrouting)
+devtools::load_all()
+library(sf)
+library(tidyverse)
+library(sfnetworks)
+# Get study area boundar
+zones_leeds = zonebuilder::zb_zone("Leeds")
+tmap::tmap_mode("view")
+# zonebuilder::zb_plot(zones_leeds)
+max_circle_id = 2 # max diameter of study area
+segment_ids = c(0:2, 10:12) # 0:12 for all segments
+zones = zones_leeds |> 
+  dplyr::select(-centroid) |> 
+  dplyr::filter(circle_id <= 2 & segment_id %in% segment_ids)
+# plot(zones)
+# mapview::mapview(zones)
+area = sf::st_union(zones)
+# plot(area)
+osm_data = osmactive::get_travel_network(
+  place = area,
+  boundary = area,
+  boundary_type = "clipsrc"
+)
+osm_drive = osmactive::get_driving_network(osm_data)
+osm_drive = sf::st_cast(osm_drive, "LINESTRING")
+plot(osm_drive["highway"])
+```
+
+```{r sfn}
+sfn = sfnetworks::as_sfnetwork(osm_drive, directed = FALSE)
+nodes_sf = st_as_sf(sfn)
+edges_sf = sf::st_as_sf(sfn, "edges")
+edges_sf$length = sf::st_length(edges_sf) |> 
+  as.numeric()
+nodes_coords = sf::st_coordinates(nodes_sf)
+nodes = data.frame(
+  ID = seq(nrow(nodes_sf)),
+  X = nodes_coords[, 1],
+  Y = nodes_coords[, 2]
+)
+head(nodes)
+edges = data.frame(
+  from = edges_sf$from,
+  to = edges_sf$to,
+  weight = edges_sf$length
+)
+head(edges)
+```
+
+```{r cpprouting}
+graph = cppRouting::makegraph(edges, nodes, directed = FALSE)
+```
+
+Let's calculate a route from Scott Hall Road to University Road:
+
+```{r}
+origin_road = sfn |> 
+  activate("edges")
+```
+
+
