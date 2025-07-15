@@ -11,6 +11,7 @@ usethis::use_package("sf")
 usethis::use_package("osmextract", type = "Suggests")
 usethis::use_package("zonebuilder", type = "Suggests")
 devtools::build_readme()
+usethis::use_data_raw("sr_data_osm")
 ```
 
 ```{r, include = FALSE}
@@ -30,7 +31,7 @@ knitr::opts_chunk$set(
 The goal of sfrouting is to enable people to generate routes for reproducible research.
 The package provides an interface between {sfnetworks} and {cppRouting} R packages, taking part of its name from each package: the package takes `sf` and `sfnetworks` objects as inputs, uses routing packages (and functions in this package TBC), and outputs `sf` objects.
 
-A design principle is for `sf` to be the *only* package installed by default when you install this package.
+A design principle is for `sf` to be the *only* import (package installed by default when you install this package).
 You will be asked to install additional packages when needed.
 
 ## Installation
@@ -133,6 +134,7 @@ route = cppRouting::get_path_pair(
   from = node_id,
   to = destination_node_id
 )
+str(route)
 route_sfn = sfn |>
   activate("nodes") |>
   filter(ID %in% route[[1]])
@@ -142,6 +144,32 @@ route_edges = route_sfn |>
   st_as_sf()
 # plot(route_nodes)
 plot(route_edges["maxspeed"])
+mapview::mapview(route_edges, zcol = "maxspeed", lwd = 1)
 ```
 
+```{r multiroutes}
+# Let's calculate for 100 random routes
+set.seed(123)
+n_routes = 10000
+random_routes = tibble(
+  from = sample(nodes$ID, n_routes, replace = TRUE),
+  to = sample(nodes$ID, n_routes, replace = TRUE)
+) |>
+  filter(from != to)
+nrow(random_routes)
+routes = cppRouting::get_path_pair(
+  Graph = graph,
+  from = random_routes$from,
+  to = random_routes$to
+)
+# Convert to sfnetwork
+routes_sfn = sfn |>
+  activate("nodes") |>
+  filter(ID %in% unlist(routes)) |>
+  activate("edges") |>
+  st_as_sf()
+nrow(routes_sfn)
+nrow(osm_data)
+# mapview::mapview(routes_sfn, zcol = "maxspeed", lwd = 1) 
+```
 
