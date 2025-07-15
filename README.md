@@ -167,12 +167,7 @@ origin_road = sfn |>
   activate("nodes") |>
   filter(!tidygraph::node_is_isolated()) |>
   st_as_sf()
-plot(origin_road)
-```
-
-<img src="man/figures/README-route-1.png" width="100%" />
-
-``` r
+# plot(origin_road)
 node_id = origin_road$ID[1]
 
 destination_road = sfn |> 
@@ -181,12 +176,7 @@ destination_road = sfn |>
   activate("nodes") |>
   filter(!tidygraph::node_is_isolated()) |>
   st_as_sf()
-plot(destination_road)
-```
-
-<img src="man/figures/README-route-2.png" width="100%" />
-
-``` r
+# plot(destination_road)
 destination_node_id = destination_road$ID[1]
 
 route = cppRouting::get_path_pair(
@@ -201,13 +191,8 @@ route_nodes = st_as_sf(route_sfn)
 route_edges = route_sfn |>
   activate("edges") |>
   st_as_sf()
-plot(route_nodes)
-```
-
-<img src="man/figures/README-route-3.png" width="100%" />
-
-``` r
+# plot(route_nodes)
 plot(route_edges["maxspeed"])
 ```
 
-<img src="man/figures/README-route-4.png" width="100%" />
+<img src="man/figures/README-route-1.png" width="100%" />
