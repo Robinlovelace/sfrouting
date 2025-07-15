@@ -38,7 +38,7 @@ pak::pak("Robinlovelace/sfrouting")
 Let's do some routing within a city of your choice.
 Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
 
-```{r example}
+```{r packages, results='hide', messages=FALSE, warnings=FALSE}
 # library(sfrouting)
 devtools::load_all()
 library(sf)
@@ -65,6 +65,11 @@ osm_data = osmactive::get_travel_network(
 )
 osm_drive = osmactive::get_driving_network(osm_data)
 osm_drive = sf::st_cast(osm_drive, "LINESTRING")
+```
+
+Let's take a look at the OSM data we have downloaded:
+
+```{r example}
 plot(osm_drive["highway"])
 nrow(osm_drive)
 # mapview::mapview(osm_drive, zcol = "highway", lwd = 1)

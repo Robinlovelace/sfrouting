@@ -74,7 +74,6 @@ osm_data = osmactive::get_travel_network(
 #> The input place was matched with West Yorkshire. 
 #> The chosen file was already detected in the download directory. Skip downloading.
 #> Starting with the vectortranslate operations on the input file!
-#> 0...10...20...30...40...50...60...70...80...90...100 - done.
 #> Warning in CPL_gdalvectortranslate(source, destination, options, oo, doo, :
 #> GDAL Message 1: A geometry of type MULTILINESTRING is inserted into layer lines
 #> of geometry type LINESTRING, which is not normally allowed by the GeoPackage
@@ -83,18 +82,16 @@ osm_data = osmactive::get_travel_network(
 #> geometry type. This warning will no longer be emitted for this combination of
 #> layer and feature geometry type.
 #> Finished the vectortranslate operations on the input file!
-#> Reading layer `lines' from data source 
-#>   `/data/bronze/osm/geofabrik_west-yorkshire-latest.gpkg' using driver `GPKG'
-#> Simple feature collection with 10059 features and 67 fields
-#> Geometry type: MULTILINESTRING
-#> Dimension:     XY
-#> Bounding box:  xmin: -1.587293 ymin: 53.78843 xmax: -1.500002 ymax: 53.82436
-#> Geodetic CRS:  WGS 84
 #> Matched these columns: lanes_psvlanes_buslanes_bus_conditionallanes_bus_backwardlanes_bus_forwardlanes_psv_backwardlanes_psv_forwardlanes_psv_conditionallanes_psv_conditional_backwardlanes_psv_conditional_forwardlanes_psv_conditional_both_wayslanes_psv_both_ways
 osm_drive = osmactive::get_driving_network(osm_data)
 osm_drive = sf::st_cast(osm_drive, "LINESTRING")
 #> Warning in st_cast.sf(osm_drive, "LINESTRING"): repeating attributes for all
 #> sub-geometries for which they may not be constant
+```
+
+Let’s take a look at the OSM data we have downloaded:
+
+``` r
 plot(osm_drive["highway"])
 ```
 
