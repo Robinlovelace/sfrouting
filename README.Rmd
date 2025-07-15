@@ -54,19 +54,21 @@ library(sf)
 library(tidyverse)
 library(sfnetworks)
 # Get study area boundar
-zones_leeds = zonebuilder::zb_zone("Leeds")
+zones_area = zonebuilder::zb_zone("Leeds", n_circles = 7)
+mapview::mapview(zones_area, zcol = "circle_id")
 tmap::tmap_mode("view")
-# zonebuilder::zb_plot(zones_leeds)
+# zonebuilder::zb_plot(zones_area)
 max_circle_id = 2 # max diameter of study area
 segment_ids = c(0:2, 10:12) # 0:12 for all segments
-zones = zones_leeds |> 
+zones = zones_area |> 
   dplyr::select(-centroid) |> 
-  dplyr::filter(circle_id <= 2 & segment_id %in% segment_ids)
+  dplyr::filter(circle_id <= max_circle_id & segment_id %in% segment_ids)
 # plot(zones)
 # mapview::mapview(zones)
 area = sf::st_union(zones)
 # plot(area)
 osm_data = osmactive::get_travel_network(
+  # place = "west yorkshire", # For specific download
   place = area,
   boundary = area,
   boundary_type = "clipsrc"
@@ -74,6 +76,8 @@ osm_data = osmactive::get_travel_network(
 osm_drive = osmactive::get_driving_network(osm_data)
 osm_drive = sf::st_cast(osm_drive, "LINESTRING")
 plot(osm_drive["highway"])
+nrow(osm_drive)
+mapview::mapview(osm_drive, zcol = "highway", lwd = 1)
 ```
 
 ```{r sfn}
@@ -106,7 +110,7 @@ graph = cppRouting::makegraph(edges, nodes, directed = FALSE)
 
 Let's calculate a route from Scott Hall Road to University Road:
 
-```{r}
+```{r route}
 origin_road = sfn |> 
   activate("edges") |>
   filter(name == "Scott Hall Road") |>
