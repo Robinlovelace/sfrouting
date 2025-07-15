@@ -166,11 +166,12 @@ osm_drive_n = dplyr::inner_join(
 
 ``` r
 # Let's calculate traffic starting with from, to, demand matrix
-n_trips = 10000
+set.seed(123)
+n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = runif(1, 10, n_trips) # Random demand between 1 and 10
+  demand = round(runif(1, 10, n_trips))
 )
 aon = cppRouting::get_aon(
   Graph = graph,
@@ -179,13 +180,13 @@ aon = cppRouting::get_aon(
   demand = trips$demand
 )
 head(aon)
-#>   from   to      cost     flow
-#> 1    1    2 123.73172 16544.58
-#> 2    1  503 139.52294 89340.71
-#> 3    1 1864  88.44373 46324.81
-#> 4    3    4  69.67965     0.00
-#> 5    5    6 119.14023     0.00
-#> 6    7    8 126.62139     0.00
+#>   from   to      cost flow
+#> 1    1    2 123.73172  290
+#> 2    1  503 139.52294  580
+#> 3    1 1864  88.44373  870
+#> 4    3    4  69.67965    0
+#> 5    5    6 119.14023    0
+#> 6    7    8 126.62139    0
 sfn_aon = left_join(
   sfn_edges |>
     mutate(across(from:to, as.character)),
@@ -197,13 +198,11 @@ sfn_aon = left_join(
 #> ℹ Row 1989 of `y` matches multiple rows in `x`.
 #> ℹ If a many-to-many relationship is expected, set `relationship =
 #>   "many-to-many"` to silence this warning.
-plot(sfn_aon["flow"], main = "Flow on edges", logz = TRUE)
-#> Warning in classInt::classIntervals(v0, min(nbreaks, n.unq), breaks, warnSmallN
-#> = FALSE): var has infinite values, omitted in finding classes
+plot(sfn_aon["flow"], main = "Flow on edges")
 ```
 
 <img src="man/figures/README-traffic-1.png" width="100%" />
 
 ``` r
-# mapview::mapview(sfn_aon, zcol = "flow", lwd = 1)
+# mapview::mapview(sfn_aon, zcol = "flow", lwd = 2)
 ```
