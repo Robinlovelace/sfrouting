@@ -84,24 +84,11 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># library(sfrouting)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">load_all</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ℹ Loading sfrouting</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
-<span><span class="co">#&gt; ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──</span></span>
-<span><span class="co">#&gt; ✔ dplyr     1.1.4     ✔ readr     2.1.5</span></span>
-<span><span class="co">#&gt; ✔ forcats   1.0.0     ✔ stringr   1.5.1</span></span>
-<span><span class="co">#&gt; ✔ ggplot2   3.5.2     ✔ tibble    3.3.0</span></span>
-<span><span class="co">#&gt; ✔ lubridate 1.9.4     ✔ tidyr     1.3.1</span></span>
-<span><span class="co">#&gt; ✔ purrr     1.1.0     </span></span>
-<span><span class="co">#&gt; ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──</span></span>
-<span><span class="co">#&gt; ✖ dplyr::filter() masks stats::filter()</span></span>
-<span><span class="co">#&gt; ✖ dplyr::lag()    masks stats::lag()</span></span>
-<span><span class="co">#&gt; ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://luukvdmeer.github.io/sfnetworks/" class="external-link">sfnetworks</a></span><span class="op">)</span></span>
 <span><span class="co"># Get study area boundar</span></span>
 <span><span class="va">zones_area</span> <span class="op">=</span> <span class="fu">zonebuilder</span><span class="fu">::</span><span class="fu"><a href="https://zonebuilders.github.io/zonebuilder/reference/zb_zone.html" class="external-link">zb_zone</a></span><span class="op">(</span><span class="st">"Leeds"</span>, n_circles <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Loading required namespace: tmaptools</span></span>
 <span><span class="co"># mapview::mapview(zones_area, zcol = "circle_id")</span></span>
 <span><span class="co"># zonebuilder::zb_plot(zones_area)</span></span>
 <span><span class="va">max_circle_id</span> <span class="op">=</span> <span class="fl">2</span> <span class="co"># max diameter of study area</span></span>
@@ -119,22 +106,8 @@
 <span>  boundary <span class="op">=</span> <span class="va">area</span>,</span>
 <span>  boundary_type <span class="op">=</span> <span class="st">"clipsrc"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; The input place was matched with West Yorkshire. </span></span>
-<span><span class="co">#&gt; The chosen file was already detected in the download directory. Skip downloading.</span></span>
-<span><span class="co">#&gt; Starting with the vectortranslate operations on the input file!</span></span>
-<span><span class="co">#&gt; Warning in CPL_gdalvectortranslate(source, destination, options, oo, doo, :</span></span>
-<span><span class="co">#&gt; GDAL Message 1: A geometry of type MULTILINESTRING is inserted into layer lines</span></span>
-<span><span class="co">#&gt; of geometry type LINESTRING, which is not normally allowed by the GeoPackage</span></span>
-<span><span class="co">#&gt; specification, but the driver will however do it. To create a conformant</span></span>
-<span><span class="co">#&gt; GeoPackage, if using ogr2ogr, the -nlt option can be used to override the layer</span></span>
-<span><span class="co">#&gt; geometry type. This warning will no longer be emitted for this combination of</span></span>
-<span><span class="co">#&gt; layer and feature geometry type.</span></span>
-<span><span class="co">#&gt; Finished the vectortranslate operations on the input file!</span></span>
-<span><span class="co">#&gt; Matched these columns: lanes_psvlanes_buslanes_bus_conditionallanes_bus_backwardlanes_bus_forwardlanes_psv_backwardlanes_psv_forwardlanes_psv_conditionallanes_psv_conditional_backwardlanes_psv_conditional_forwardlanes_psv_conditional_both_wayslanes_psv_both_ways</span></span>
 <span><span class="va">osm_drive</span> <span class="op">=</span> <span class="fu">osmactive</span><span class="fu">::</span><span class="fu"><a href="https://nptscot.github.io/osmactive/reference/get_driving_network.html" class="external-link">get_driving_network</a></span><span class="op">(</span><span class="va">osm_data</span><span class="op">)</span></span>
-<span><span class="va">osm_drive</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_cast.html" class="external-link">st_cast</a></span><span class="op">(</span><span class="va">osm_drive</span>, <span class="st">"LINESTRING"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in st_cast.sf(osm_drive, "LINESTRING"): repeating attributes for all</span></span>
-<span><span class="co">#&gt; sub-geometries for which they may not be constant</span></span></code></pre></div>
+<span><span class="va">osm_drive</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_cast.html" class="external-link">st_cast</a></span><span class="op">(</span><span class="va">osm_drive</span>, <span class="st">"LINESTRING"</span><span class="op">)</span></span></code></pre></div>
 <p>Let’s take a look at the OSM data we have downloaded:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">osm_drive</span><span class="op">[</span><span class="st">"highway"</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
