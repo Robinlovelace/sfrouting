@@ -114,6 +114,9 @@ sfn = sfn |>
   mutate(ID = row_number())
 nodes = sfn |> 
   st_as_sf()
+sfn_edges = sfn |> 
+  activate("edges") |>
+  st_as_sf()
 graph = sfn_to_cpprouting(sfn)
 nrow(graph$coords)
 #> [1] 7055
@@ -151,30 +154,84 @@ plot(route_sf["maxspeed"])
 ```
 
 ``` r
-# Let's calculate for 100 random routes
+# Let's calculate for n random routes
 set.seed(123)
-n_routes = 10000
+n_routes = 1000
 random_routes = tibble(
   from = sample(nodes$ID, n_routes, replace = TRUE),
   to = sample(nodes$ID, n_routes, replace = TRUE)
 ) |>
   filter(from != to)
 nrow(random_routes)
-#> [1] 10000
+#> [1] 1000
 routes = cppRouting::get_path_pair(
   Graph = graph,
   from = random_routes$from,
   to = random_routes$to
 )
+length(routes)
+#> [1] 1000
 # Convert to sfnetwork
-routes_sfn = sfn |>
-  activate("nodes") |>
-  filter(ID %in% unlist(routes)) |>
-  activate("edges") |>
-  st_as_sf()
-nrow(routes_sfn)
-#> [1] 1457
-nrow(osm_data)
-#> [1] 10059
-# mapview::mapview(routes_sfn, zcol = "maxspeed", lwd = 1) 
+routes_osm_ids = purrr::map_dfr(routes, function(route) {
+  routes_sfn = sfn |>
+    activate("nodes") |>
+    filter(ID %in% route) |>
+    activate("edges") |>
+    st_as_sf() |>
+    sf::st_drop_geometry() |>
+    select(osm_id)
+})
+osm_ids_grouped = routes_osm_ids |>
+  group_by(osm_id) |>
+  summarise(n = n())
+osm_drive_n = dplyr::inner_join(
+  osm_drive |>
+    select(osm_id),
+  osm_ids_grouped
+)
+#> Joining with `by = join_by(osm_id)`
+# plot(osm_drive_n["n"], main = "Number of routes per OSM ID")
+# mapview::mapview(osm_drive_n, zcol = "n", lwd = 1)
+```
+
+``` r
+# Let's calculate traffic starting with from, to, demand matrix
+n_trips = 10000
+trips = data.frame(
+  from = sample(nodes$ID, n_trips, replace = TRUE),
+  to = sample(nodes$ID, n_trips, replace = TRUE),
+  demand = runif(1, 10, n_trips) # Random demand between 1 and 10
+)
+aon = cppRouting::get_aon(
+  Graph = graph,
+  from = trips$from,
+  to = trips$to,
+  demand = trips$demand
+)
+head(aon)
+#>   from   to      cost     flow
+#> 1    1    2 123.73172 16544.58
+#> 2    1  503 139.52294 89340.71
+#> 3    1 1864  88.44373 46324.81
+#> 4    3    4  69.67965     0.00
+#> 5    5    6 119.14023     0.00
+#> 6    7    8 126.62139     0.00
+sfn_aon = left_join(
+  sfn_edges |>
+    mutate(across(from:to, as.character)),
+  aon
+)
+#> Joining with `by = join_by(from, to)`
+#> Warning in sf_column %in% names(g): Detected an unexpected many-to-many relationship between `x` and `y`.
+#> ℹ Row 19 of `x` matches multiple rows in `y`.
+#> ℹ Row 1989 of `y` matches multiple rows in `x`.
+#> ℹ If a many-to-many relationship is expected, set `relationship =
+#>   "many-to-many"` to silence this warning.
+plot(sfn_aon["flow"], main = "Flow on edges")
+```
+
+<img src="man/figures/README-traffic-1.png" width="100%" />
+
+``` r
+# mapview::mapview(sfn_aon, zcol = "flow", lwd = 1)
 ```

@@ -78,6 +78,9 @@ sfn = sfn |>
   mutate(ID = row_number())
 nodes = sfn |> 
   st_as_sf()
+sfn_edges = sfn |> 
+  activate("edges") |>
+  st_as_sf()
 graph = sfn_to_cpprouting(sfn)
 nrow(graph$coords)
 ```
@@ -109,9 +112,9 @@ plot(route_sf["maxspeed"])
 ```
 
 ```{r multiroutes}
-# Let's calculate for 100 random routes
+# Let's calculate for n random routes
 set.seed(123)
-n_routes = 10000
+n_routes = 1000
 random_routes = tibble(
   from = sample(nodes$ID, n_routes, replace = TRUE),
   to = sample(nodes$ID, n_routes, replace = TRUE)
@@ -123,17 +126,52 @@ routes = cppRouting::get_path_pair(
   from = random_routes$from,
   to = random_routes$to
 )
+length(routes)
 # Convert to sfnetwork
-routes_sfn = sfn |>
-  activate("nodes") |>
-  filter(ID %in% unlist(routes)) |>
-  activate("edges") |>
-  st_as_sf()
-nrow(routes_sfn)
-nrow(osm_data)
-# mapview::mapview(routes_sfn, zcol = "maxspeed", lwd = 1) 
+routes_osm_ids = purrr::map_dfr(routes, function(route) {
+  routes_sfn = sfn |>
+    activate("nodes") |>
+    filter(ID %in% route) |>
+    activate("edges") |>
+    st_as_sf() |>
+    sf::st_drop_geometry() |>
+    select(osm_id)
+})
+osm_ids_grouped = routes_osm_ids |>
+  group_by(osm_id) |>
+  summarise(n = n())
+osm_drive_n = dplyr::inner_join(
+  osm_drive |>
+    select(osm_id),
+  osm_ids_grouped
+)
+# plot(osm_drive_n["n"], main = "Number of routes per OSM ID")
+# mapview::mapview(osm_drive_n, zcol = "n", lwd = 1)
 ```
 
+```{r traffic}
+# Let's calculate traffic starting with from, to, demand matrix
+n_trips = 10000
+trips = data.frame(
+  from = sample(nodes$ID, n_trips, replace = TRUE),
+  to = sample(nodes$ID, n_trips, replace = TRUE),
+  demand = runif(1, 10, n_trips) # Random demand between 1 and 10
+)
+aon = cppRouting::get_aon(
+  Graph = graph,
+  from = trips$from,
+  to = trips$to,
+  demand = trips$demand
+)
+head(aon)
+sfn_aon = left_join(
+  sfn_edges |>
+    mutate(across(from:to, as.character)),
+  aon
+)
+plot(sfn_aon["flow"], main = "Flow on edges")
+# mapview::mapview(sfn_aon, zcol = "flow", lwd = 1)
+```
 
 ```{r setup, eval=FALSE, echo=FALSE}
 usethis::use_readme_rmd()
