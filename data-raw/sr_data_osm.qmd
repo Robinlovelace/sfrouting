@@ -1,0 +1,44 @@
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r get-region}
+## code to prepare `sr_data_osm` dataset goes here
+zones_region = zonebuilder::zb_zone("Leeds")
+area = zones_region |>
+  slice(1) |>
+  transmute(name = "Leeds")
+plot(area)
+```
+
+```{r osm}
+osm_data = osmactive::get_travel_network(
+  place = area,
+  boundary = area,
+  boundary_type = "clipsrc"
+)
+osm_data = osmactive::get_driving_network(osm_data)
+names(osm_data)
+cols_n_na = osm_data |>
+  map_dbl(~ sum(is.na(.x)))
+cols_proportion_na = cols_n_na / nrow(osm_data)
+cols_to_keep = cols_proportion_na < 0.9
+names_to_keep = names(osm_data)[cols_to_keep]
+names_to_drop = names(osm_data)[!cols_to_keep]
+names_to_keep
+sr_data_osm = osm_data |>
+  select(all_of(names_to_keep)) |>
+  sf::st_cast("LINESTRING") 
+nrow(sr_data_osm)
+# mapview::mapview(sr_data_osm, zcol = "highway")
+plot(sr_data_osm)
+```
+
+...
+
+```{r}
+usethis::use_data(sr_data_osm, overwrite = TRUE)
+```
+

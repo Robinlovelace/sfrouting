@@ -1,1 +1,4 @@
 ^README\.Rmd$
+^data-raw$
+^LICENSE\.md$
+^\.github$

@@ -8,12 +8,16 @@ usethis::use_package("sf")
 usethis::use_package("osmextract", type = "Suggests")
 usethis::use_package("zonebuilder", type = "Suggests")
 devtools::build_readme()
+usethis::use_data_raw("sr_data_osm")
 ```
 
 # sfrouting 🏗️ work in progress 🏗️
 
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/Robinlovelace/sfrouting/graph/badge.svg)](https://app.codecov.io/gh/Robinlovelace/sfrouting)
 <!-- badges: end -->
 
 The goal of sfrouting is to enable people to generate routes for
@@ -23,9 +27,9 @@ each package: the package takes `sf` and `sfnetworks` objects as inputs,
 uses routing packages (and functions in this package TBC), and outputs
 `sf` objects.
 
-A design principle is for `sf` to be the *only* package installed by
-default when you install this package. You will be asked to install
-additional packages when needed.
+A design principle is for `sf` to be the *only* import (package
+installed by default when you install this package). You will be asked
+to install additional packages when needed.
 
 ## Installation
 
@@ -117,45 +121,16 @@ nrow(osm_drive)
 ```
 
 ``` r
-sfn = as_sfnetwork(osm_drive, directed = FALSE) |>
-  # Add ids to nodes:
+sfn = as_sfnetwork(osm_drive, directed = FALSE)
+# Add node IDs to sfn for routing, needed for filter() below
+sfn = sfn |>
   activate("nodes") |>
-  mutate(ID = seq(n())) 
-nodes_sf = st_as_sf(sfn)
-edges_sf = sf::st_as_sf(sfn, "edges")
-edges_sf$length = sf::st_length(edges_sf) |> 
-  as.numeric()
-nodes_coords = sf::st_coordinates(nodes_sf)
-nodes = data.frame(
-  ID = seq(nrow(nodes_sf)),
-  X = nodes_coords[, 1],
-  Y = nodes_coords[, 2]
-)
-head(nodes)
-#>   ID         X        Y
-#> 1  1 -1.557540 53.79996
-#> 2  2 -1.557453 53.80107
-#> 3  3 -1.558721 53.80308
-#> 4  4 -1.558404 53.80368
-#> 5  5 -1.573466 53.81692
-#> 6  6 -1.571726 53.81662
-edges = data.frame(
-  from = edges_sf$from,
-  to = edges_sf$to,
-  weight = edges_sf$length
-)
-head(edges)
-#>   from to    weight
-#> 1    1  2 123.73172
-#> 2    3  4  69.67965
-#> 3    5  6 119.14023
-#> 4    7  8 126.62139
-#> 5    9 10 165.67475
-#> 6   11 12 148.85676
-```
-
-``` r
-graph = cppRouting::makegraph(edges, nodes, directed = FALSE)
+  mutate(ID = row_number())
+nodes = sfn |> 
+  st_as_sf()
+graph = sfn_to_cpprouting(sfn)
+nrow(graph$coords)
+#> [1] 7055
 ```
 
 Let’s calculate a route from Scott Hall Road to University Road:
@@ -179,20 +154,41 @@ destination_road = sfn |>
 # plot(destination_road)
 destination_node_id = destination_road$ID[1]
 
-route = cppRouting::get_path_pair(
-  Graph = graph,
-  from = node_id,
-  to = destination_node_id
-)
-route_sfn = sfn |>
-  activate("nodes") |>
-  filter(ID %in% route[[1]])
-route_nodes = st_as_sf(route_sfn)
-route_edges = route_sfn |>
-  activate("edges") |>
-  st_as_sf()
-# plot(route_nodes)
-plot(route_edges["maxspeed"])
+route_sf = sr_route(sfn, from = node_id, to = destination_node_id)
+plot(route_sf["maxspeed"])
 ```
 
 <img src="man/figures/README-route-1.png" width="100%" />
+
+``` r
+# mapview::mapview(route_sf, zcol = "maxspeed", lwd = 1)
+```
+
+``` r
+# Let's calculate for 100 random routes
+set.seed(123)
+n_routes = 10000
+random_routes = tibble(
+  from = sample(nodes$ID, n_routes, replace = TRUE),
+  to = sample(nodes$ID, n_routes, replace = TRUE)
+) |>
+  filter(from != to)
+nrow(random_routes)
+#> [1] 10000
+routes = cppRouting::get_path_pair(
+  Graph = graph,
+  from = random_routes$from,
+  to = random_routes$to
+)
+# Convert to sfnetwork
+routes_sfn = sfn |>
+  activate("nodes") |>
+  filter(ID %in% unlist(routes)) |>
+  activate("edges") |>
+  st_as_sf()
+nrow(routes_sfn)
+#> [1] 1457
+nrow(osm_data)
+#> [1] 10059
+# mapview::mapview(routes_sfn, zcol = "maxspeed", lwd = 1) 
+```
