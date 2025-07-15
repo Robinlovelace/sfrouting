@@ -1,16 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-``` r
-usethis::use_readme_rmd()
-usethis::use_description()
-usethis::use_package("sf")
-usethis::use_package("osmextract", type = "Suggests")
-usethis::use_package("zonebuilder", type = "Suggests")
-devtools::build_readme()
-usethis::use_data_raw("sr_data_osm")
-```
-
 # sfrouting 🏗️ work in progress 🏗️
 
 <!-- badges: start -->
