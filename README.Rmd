@@ -169,7 +169,7 @@ sfn_aon = left_join(
     mutate(across(from:to, as.character)),
   aon
 )
-plot(sfn_aon["flow"], main = "Flow on edges")
+plot(sfn_aon["flow"], main = "Flow on edges", logz = TRUE)
 # mapview::mapview(sfn_aon, zcol = "flow", lwd = 1)
 ```
 

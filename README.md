@@ -227,7 +227,9 @@ sfn_aon = left_join(
 #> ℹ Row 1989 of `y` matches multiple rows in `x`.
 #> ℹ If a many-to-many relationship is expected, set `relationship =
 #>   "many-to-many"` to silence this warning.
-plot(sfn_aon["flow"], main = "Flow on edges")
+plot(sfn_aon["flow"], main = "Flow on edges", logz = TRUE)
+#> Warning in classInt::classIntervals(v0, min(nbreaks, n.unq), breaks, warnSmallN
+#> = FALSE): var has infinite values, omitted in finding classes
 ```
 
 <img src="man/figures/README-traffic-1.png" width="100%" />
