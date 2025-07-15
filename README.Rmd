@@ -77,7 +77,10 @@ plot(osm_drive["highway"])
 ```
 
 ```{r sfn}
-sfn = sfnetworks::as_sfnetwork(osm_drive, directed = FALSE)
+sfn = as_sfnetwork(osm_drive, directed = FALSE) |>
+  # Add ids to nodes:
+  activate("nodes") |>
+  mutate(ID = seq(n())) 
 nodes_sf = st_as_sf(sfn)
 edges_sf = sf::st_as_sf(sfn, "edges")
 edges_sf$length = sf::st_length(edges_sf) |> 
@@ -105,7 +108,37 @@ Let's calculate a route from Scott Hall Road to University Road:
 
 ```{r}
 origin_road = sfn |> 
-  activate("edges")
+  activate("edges") |>
+  filter(name == "Scott Hall Road") |>
+  activate("nodes") |>
+  filter(!tidygraph::node_is_isolated()) |>
+  st_as_sf()
+plot(origin_road)
+node_id = origin_road$ID[1]
+
+destination_road = sfn |> 
+  activate("edges") |>
+  filter(name == "University Road") |>
+  activate("nodes") |>
+  filter(!tidygraph::node_is_isolated()) |>
+  st_as_sf()
+plot(destination_road)
+destination_node_id = destination_road$ID[1]
+
+route = cppRouting::get_path_pair(
+  Graph = graph,
+  from = node_id,
+  to = destination_node_id
+)
+route_sfn = sfn |>
+  activate("nodes") |>
+  filter(ID %in% route[[1]])
+route_nodes = st_as_sf(route_sfn)
+route_edges = route_sfn |>
+  activate("edges") |>
+  st_as_sf()
+plot(route_nodes)
+plot(route_edges["maxspeed"])
 ```
 
 
