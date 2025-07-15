@@ -21,6 +21,8 @@ Imports:
     tidygraph
 Depends: 
     R (>= 4.1.0)
+Remotes: 
+    nptscot/osmactive
 LazyData: true
 URL: https://github.com/Robinlovelace/sfrouting
 BugReports: https://github.com/Robinlovelace/sfrouting/issues
