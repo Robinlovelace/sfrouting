@@ -10,14 +10,12 @@
 
 The goal of sfrouting is to enable people to generate routes for
 reproducible research. The package provides an interface between
-{sfnetworks} and {cppRouting} R packages, taking part of its name from
-each package: the package takes `sf` and `sfnetworks` objects as inputs,
-uses routing packages (and functions in this package TBC), and outputs
-`sf` objects.
+{[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and
+{[cppRouting](https://cran.r-project.org/package=cppRouting)} R
+packages.
 
-A design principle is for `sf` to be the *only* import (package
-installed by default when you install this package). You will be asked
-to install additional packages when needed.
+Design principles are for the package to work with `sf` and `sfnetworks`
+objects and to output `sf` objects.
 
 ## Installation
 
