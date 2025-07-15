@@ -16,16 +16,7 @@
 #' }
 #' }
 sfn_to_cpprouting = function(sfn, directed = FALSE) {
-  if (!requireNamespace("cppRouting", quietly = TRUE)) {
-    stop("Package 'cppRouting' is required. Please install it.", call. = FALSE)
-  }
-  if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("Package 'sf' is required. Please install it.", call. = FALSE)
-  }
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required. Please install it.", call. = FALSE)
-  }
-  
+ 
   # Ensure nodes have a unique ID
   sfn = sfn |>
     tidygraph::activate("nodes") |>
