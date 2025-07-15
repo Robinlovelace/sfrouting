@@ -157,6 +157,9 @@
 <span>  <span class="fu">mutate</span><span class="op">(</span>ID <span class="op">=</span> <span class="fu">row_number</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">nodes</span> <span class="op">=</span> <span class="va">sfn</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">sfn_edges</span> <span class="op">=</span> <span class="va">sfn</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">activate</span><span class="op">(</span><span class="st">"edges"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">graph</span> <span class="op">=</span> <span class="fu"><a href="reference/sfn_to_cpprouting.html">sfn_to_cpprouting</a></span><span class="op">(</span><span class="va">sfn</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">graph</span><span class="op">$</span><span class="va">coords</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 7055</span></span></code></pre></div>
@@ -186,32 +189,81 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># mapview::mapview(route_sf, zcol = "maxspeed", lwd = 1)</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Let's calculate for 100 random routes</span></span>
+<code class="sourceCode R"><span><span class="co"># Let's calculate for n random routes</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">n_routes</span> <span class="op">=</span> <span class="fl">10000</span></span>
+<span><span class="va">n_routes</span> <span class="op">=</span> <span class="fl">1000</span></span>
 <span><span class="va">random_routes</span> <span class="op">=</span> <span class="fu">tibble</span><span class="op">(</span></span>
 <span>  from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">nodes</span><span class="op">$</span><span class="va">ID</span>, <span class="va">n_routes</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  to <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">nodes</span><span class="op">$</span><span class="va">ID</span>, <span class="va">n_routes</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">from</span> <span class="op">!=</span> <span class="va">to</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">random_routes</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 10000</span></span>
+<span><span class="co">#&gt; [1] 1000</span></span>
 <span><span class="va">routes</span> <span class="op">=</span> <span class="fu">cppRouting</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/cppRouting/man/get_path_pair.html" class="external-link">get_path_pair</a></span><span class="op">(</span></span>
 <span>  Graph <span class="op">=</span> <span class="va">graph</span>,</span>
 <span>  from <span class="op">=</span> <span class="va">random_routes</span><span class="op">$</span><span class="va">from</span>,</span>
 <span>  to <span class="op">=</span> <span class="va">random_routes</span><span class="op">$</span><span class="va">to</span></span>
 <span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">routes</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1000</span></span>
 <span><span class="co"># Convert to sfnetwork</span></span>
-<span><span class="va">routes_sfn</span> <span class="op">=</span> <span class="va">sfn</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">activate</span><span class="op">(</span><span class="st">"nodes"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">routes</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">activate</span><span class="op">(</span><span class="st">"edges"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">routes_sfn</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1457</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">osm_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 10059</span></span>
-<span><span class="co"># mapview::mapview(routes_sfn, zcol = "maxspeed", lwd = 1) </span></span></code></pre></div>
+<span><span class="va">routes_osm_ids</span> <span class="op">=</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html" class="external-link">map_dfr</a></span><span class="op">(</span><span class="va">routes</span>, <span class="kw">function</span><span class="op">(</span><span class="va">route</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">routes_sfn</span> <span class="op">=</span> <span class="va">sfn</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">activate</span><span class="op">(</span><span class="st">"nodes"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">ID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">route</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">activate</span><span class="op">(</span><span class="st">"edges"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_drop_geometry</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">select</span><span class="op">(</span><span class="va">osm_id</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">osm_ids_grouped</span> <span class="op">=</span> <span class="va">routes_osm_ids</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">osm_id</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">summarise</span><span class="op">(</span>n <span class="op">=</span> <span class="fu">n</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">osm_drive_n</span> <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">inner_join</a></span><span class="op">(</span></span>
+<span>  <span class="va">osm_drive</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">select</span><span class="op">(</span><span class="va">osm_id</span><span class="op">)</span>,</span>
+<span>  <span class="va">osm_ids_grouped</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(osm_id)`</span></span>
+<span><span class="co"># plot(osm_drive_n["n"], main = "Number of routes per OSM ID")</span></span>
+<span><span class="co"># mapview::mapview(osm_drive_n, zcol = "n", lwd = 1)</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Let's calculate traffic starting with from, to, demand matrix</span></span>
+<span><span class="va">n_trips</span> <span class="op">=</span> <span class="fl">10000</span></span>
+<span><span class="va">trips</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">nodes</span><span class="op">$</span><span class="va">ID</span>, <span class="va">n_trips</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  to <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">nodes</span><span class="op">$</span><span class="va">ID</span>, <span class="va">n_trips</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  demand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="va">n_trips</span><span class="op">)</span> <span class="co"># Random demand between 1 and 10</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">aon</span> <span class="op">=</span> <span class="fu">cppRouting</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/cppRouting/man/get_aon.html" class="external-link">get_aon</a></span><span class="op">(</span></span>
+<span>  Graph <span class="op">=</span> <span class="va">graph</span>,</span>
+<span>  from <span class="op">=</span> <span class="va">trips</span><span class="op">$</span><span class="va">from</span>,</span>
+<span>  to <span class="op">=</span> <span class="va">trips</span><span class="op">$</span><span class="va">to</span>,</span>
+<span>  demand <span class="op">=</span> <span class="va">trips</span><span class="op">$</span><span class="va">demand</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">aon</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   from   to      cost     flow</span></span>
+<span><span class="co">#&gt; 1    1    2 123.73172 16544.58</span></span>
+<span><span class="co">#&gt; 2    1  503 139.52294 89340.71</span></span>
+<span><span class="co">#&gt; 3    1 1864  88.44373 46324.81</span></span>
+<span><span class="co">#&gt; 4    3    4  69.67965     0.00</span></span>
+<span><span class="co">#&gt; 5    5    6 119.14023     0.00</span></span>
+<span><span class="co">#&gt; 6    7    8 126.62139     0.00</span></span>
+<span><span class="va">sfn_aon</span> <span class="op">=</span> <span class="fu">left_join</span><span class="op">(</span></span>
+<span>  <span class="va">sfn_edges</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">mutate</span><span class="op">(</span><span class="fu">across</span><span class="op">(</span><span class="va">from</span><span class="op">:</span><span class="va">to</span>, <span class="va">as.character</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="va">aon</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Joining with `by = join_by(from, to)`</span></span>
+<span><span class="co">#&gt; Warning in sf_column %in% names(g): Detected an unexpected many-to-many relationship between `x` and `y`.</span></span>
+<span><span class="co">#&gt; ℹ Row 19 of `x` matches multiple rows in `y`.</span></span>
+<span><span class="co">#&gt; ℹ Row 1989 of `y` matches multiple rows in `x`.</span></span>
+<span><span class="co">#&gt; ℹ If a many-to-many relationship is expected, set `relationship =</span></span>
+<span><span class="co">#&gt;   "many-to-many"` to silence this warning.</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sfn_aon</span><span class="op">[</span><span class="st">"flow"</span><span class="op">]</span>, main <span class="op">=</span> <span class="st">"Flow on edges"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-traffic-1.png" width="100%"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># mapview::mapview(sfn_aon, zcol = "flow", lwd = 1)</span></span></code></pre></div>
 </div>
 </div>
   </div>
