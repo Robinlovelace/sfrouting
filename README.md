@@ -36,24 +36,11 @@ below to test the package for yourself elsewhere.
 ``` r
 # library(sfrouting)
 devtools::load_all()
-#> ℹ Loading sfrouting
 library(sf)
-#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.3.1; sf_use_s2() is TRUE
 library(tidyverse)
-#> ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-#> ✔ dplyr     1.1.4     ✔ readr     2.1.5
-#> ✔ forcats   1.0.0     ✔ stringr   1.5.1
-#> ✔ ggplot2   3.5.2     ✔ tibble    3.3.0
-#> ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-#> ✔ purrr     1.1.0     
-#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-#> ✖ dplyr::filter() masks stats::filter()
-#> ✖ dplyr::lag()    masks stats::lag()
-#> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 library(sfnetworks)
 # Get study area boundar
 zones_area = zonebuilder::zb_zone("Leeds", n_circles = 7)
-#> Loading required namespace: tmaptools
 # mapview::mapview(zones_area, zcol = "circle_id")
 # zonebuilder::zb_plot(zones_area)
 max_circle_id = 2 # max diameter of study area
@@ -71,22 +58,8 @@ osm_data = osmactive::get_travel_network(
   boundary = area,
   boundary_type = "clipsrc"
 )
-#> The input place was matched with West Yorkshire. 
-#> The chosen file was already detected in the download directory. Skip downloading.
-#> Starting with the vectortranslate operations on the input file!
-#> Warning in CPL_gdalvectortranslate(source, destination, options, oo, doo, :
-#> GDAL Message 1: A geometry of type MULTILINESTRING is inserted into layer lines
-#> of geometry type LINESTRING, which is not normally allowed by the GeoPackage
-#> specification, but the driver will however do it. To create a conformant
-#> GeoPackage, if using ogr2ogr, the -nlt option can be used to override the layer
-#> geometry type. This warning will no longer be emitted for this combination of
-#> layer and feature geometry type.
-#> Finished the vectortranslate operations on the input file!
-#> Matched these columns: lanes_psvlanes_buslanes_bus_conditionallanes_bus_backwardlanes_bus_forwardlanes_psv_backwardlanes_psv_forwardlanes_psv_conditionallanes_psv_conditional_backwardlanes_psv_conditional_forwardlanes_psv_conditional_both_wayslanes_psv_both_ways
 osm_drive = osmactive::get_driving_network(osm_data)
 osm_drive = sf::st_cast(osm_drive, "LINESTRING")
-#> Warning in st_cast.sf(osm_drive, "LINESTRING"): repeating attributes for all
-#> sub-geometries for which they may not be constant
 ```
 
 Let’s take a look at the OSM data we have downloaded:

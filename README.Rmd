@@ -38,7 +38,7 @@ pak::pak("Robinlovelace/sfrouting")
 Let's do some routing within a city of your choice.
 Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
 
-```{r packages, results='hide', messages=FALSE, warnings=FALSE}
+```{r packages, results='hide', message=FALSE, warning=FALSE}
 # library(sfrouting)
 devtools::load_all()
 library(sf)
