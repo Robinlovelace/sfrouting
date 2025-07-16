@@ -6,6 +6,7 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
 The goal of sfrouting is to enable people to generate routes for
@@ -72,7 +73,7 @@ plot(osm_drive["highway"])
 
 ``` r
 nrow(osm_drive)
-#> [1] 4975
+#> [1] 4999
 # mapview::mapview(osm_drive, zcol = "highway", lwd = 1)
 ```
 
@@ -89,7 +90,7 @@ sfn_edges = sfn |>
   st_as_sf()
 graph = sfn_to_cpprouting(sfn)
 nrow(graph$coords)
-#> [1] 7055
+#> [1] 7089
 ```
 
 Let’s calculate a route from Scott Hall Road to University Road:
@@ -171,7 +172,7 @@ n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = round(runif(1, 10, n_trips))
+  demand = round(runif(n_trips,1, 10))
 )
 aon = cppRouting::get_aon(
   Graph = graph,
@@ -181,9 +182,9 @@ aon = cppRouting::get_aon(
 )
 head(aon)
 #>   from   to      cost flow
-#> 1    1    2 123.73172  290
-#> 2    1  503 139.52294  580
-#> 3    1 1864  88.44373  870
+#> 1    1    2 123.73172    3
+#> 2    1  504 139.52294   16
+#> 3    1 1863  88.44373    7
 #> 4    3    4  69.67965    0
 #> 5    5    6 119.14023    0
 #> 6    7    8 126.62139    0
@@ -191,14 +192,19 @@ sfn_aon = left_join(
   sfn_edges |>
     mutate(across(from:to, as.character)),
   aon
-)
+) |> 
+  mutate(flow = if_else(flow==0,NA_integer_,flow))
 #> Joining with `by = join_by(from, to)`
 #> Warning in sf_column %in% names(g): Detected an unexpected many-to-many relationship between `x` and `y`.
 #> ℹ Row 19 of `x` matches multiple rows in `y`.
-#> ℹ Row 1989 of `y` matches multiple rows in `x`.
+#> ℹ Row 1992 of `y` matches multiple rows in `x`.
 #> ℹ If a many-to-many relationship is expected, set `relationship =
 #>   "many-to-many"` to silence this warning.
-plot(sfn_aon["flow"], main = "Flow on edges")
+
+plot(sfn_aon[!is.na(sfn_aon$flow), "flow"],
+     main = "Flow on edges",lwd = 1.5,reset = FALSE)
+plot(sfn_aon[is.na(sfn_aon$flow),"geometry"],
+     main = "Flow on edges",add=TRUE,col = "gray70")
 ```
 
 <img src="man/figures/README-traffic-1.png" width="100%" />

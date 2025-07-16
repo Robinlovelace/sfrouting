@@ -16,11 +16,12 @@ knitr::opts_chunk$set(
 # sfrouting 🏗️ work in progress 🏗️
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Robinlovelace/sfrouting/actions/workflows/R-CMD-check.yaml)
+
 <!-- badges: end -->
 
-The goal of sfrouting is to enable people to generate routes for reproducible research.
-The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
+The goal of sfrouting is to enable people to generate routes for reproducible research. The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
 
 Design principles are for the package to work with `sf` and `sfnetworks` objects and to output `sf` objects.
 
@@ -35,8 +36,7 @@ pak::pak("Robinlovelace/sfrouting")
 
 ## Example
 
-Let's do some routing within a city of your choice.
-Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
+Let's do some routing within a city of your choice. Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
 
 ```{r packages, results='hide', message=FALSE, warning=FALSE}
 # library(sfrouting)
@@ -161,7 +161,7 @@ n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = round(runif(1, 10, n_trips))
+  demand = round(runif(n_trips,1, 10))
 )
 aon = cppRouting::get_aon(
   Graph = graph,
@@ -174,8 +174,13 @@ sfn_aon = left_join(
   sfn_edges |>
     mutate(across(from:to, as.character)),
   aon
-)
-plot(sfn_aon["flow"], main = "Flow on edges")
+) |> 
+  mutate(flow = if_else(flow==0,NA_integer_,flow))
+
+plot(sfn_aon[!is.na(sfn_aon$flow), "flow"],
+     main = "Flow on edges",lwd = 1.5,reset = FALSE)
+plot(sfn_aon[is.na(sfn_aon$flow),"geometry"],
+     main = "Flow on edges",add=TRUE,col = "gray70")
 # mapview::mapview(sfn_aon, zcol = "flow", lwd = 2)
 ```
 
