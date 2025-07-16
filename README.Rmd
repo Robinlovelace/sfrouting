@@ -1,5 +1,8 @@
 ---
 output: github_document
+editor:
+  markdown:
+    wrap: sentence
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -21,7 +24,8 @@ knitr::opts_chunk$set(
 
 <!-- badges: end -->
 
-The goal of sfrouting is to enable people to generate routes for reproducible research. The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
+The goal of sfrouting is to enable people to generate routes for reproducible research.
+The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
 
 Design principles are for the package to work with `sf` and `sfnetworks` objects and to output `sf` objects.
 
@@ -36,7 +40,8 @@ pak::pak("Robinlovelace/sfrouting")
 
 ## Example
 
-Let's do some routing within a city of your choice. Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
+Let's do some routing within a city of your choice.
+Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
 
 ```{r packages, results='hide', message=FALSE, warning=FALSE}
 # library(sfrouting)
@@ -161,7 +166,7 @@ n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = round(runif(n_trips,1, 10))
+  demand = round(runif(n_trips, 1, 100))
 )
 aon = cppRouting::get_aon(
   Graph = graph,

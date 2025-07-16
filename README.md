@@ -172,7 +172,7 @@ n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = round(runif(n_trips,1, 10))
+  demand = round(runif(n_trips, 1, 100))
 )
 aon = cppRouting::get_aon(
   Graph = graph,
@@ -182,9 +182,9 @@ aon = cppRouting::get_aon(
 )
 head(aon)
 #>   from   to      cost flow
-#> 1    1    2 123.73172    3
-#> 2    1  504 139.52294   16
-#> 3    1 1863  88.44373    7
+#> 1    1    2 123.73172   20
+#> 2    1  504 139.52294  157
+#> 3    1 1863  88.44373   67
 #> 4    3    4  69.67965    0
 #> 5    5    6 119.14023    0
 #> 6    7    8 126.62139    0
