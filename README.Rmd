@@ -24,8 +24,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: end -->
 
-The goal of sfrouting is to enable people to generate routes for reproducible research.
-The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
+The goal of sfrouting is to enable people to generate routes for reproducible research. The package provides an interface between {[sfnetworks](https://luukvdmeer.github.io/sfnetworks/)} and {[cppRouting](https://cran.r-project.org/package=cppRouting)} R packages.
 
 Design principles are for the package to work with `sf` and `sfnetworks` objects and to output `sf` objects.
 
@@ -40,8 +39,7 @@ pak::pak("Robinlovelace/sfrouting")
 
 ## Example
 
-Let's do some routing within a city of your choice.
-Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
+Let's do some routing within a city of your choice. Change the name of the city and `max_circle_id` and `segment_ids` objects in the code chunk below to test the package for yourself elsewhere.
 
 ```{r packages, results='hide', message=FALSE, warning=FALSE}
 # library(sfrouting)
@@ -188,6 +186,97 @@ plot(sfn_aon[is.na(sfn_aon$flow),"geometry"],
      main = "Flow on edges",add=TRUE,col = "gray70")
 # mapview::mapview(sfn_aon, zcol = "flow", lwd = 2)
 ```
+
+## Custom weighting
+
+```{r get-quietness}
+areabb = sf::st_bbox(zones) |> paste(collapse = ",")
+
+
+cycle_net <- cyclestreets::ways(bb = areabb,limit = 10000)
+cycle_net <- sf::st_intersection(cycle_net,area)
+
+plot(cycle_net["quietness"])
+# mapview::mapview(cycle_net)
+```
+
+```{r join-quietness}
+
+cycle_net_data <- cycle_net |> st_drop_geometry()
+
+overlaps <- osm_drive |> st_intersects(cycle_net)
+
+osm_drive$quietness <- 
+  vapply(overlaps,function(x){
+    cycle_net_data[x,][["quietness"]] |> mean(na.rm = T) 
+    },numeric(1))
+
+osm_drive$quietness[is.nan(osm_drive$quietness)] <- 1
+
+plot(osm_drive["quietness"])
+# mapview::mapview(osm_drive, z= "quietness"  )
+```
+
+
+```{r sfn-graph-quiet}
+sfn = as_sfnetwork(osm_drive, directed = FALSE)
+
+# Add node IDs to sfn for routing, needed for filter() below
+sfn = sfn |>
+  activate("nodes") |>
+  mutate(ID = row_number())
+nodes = sfn |> 
+  st_as_sf()
+sfn_edges = sfn |> 
+  activate("edges") |>
+  st_as_sf()
+
+
+# Add node IDs to sfn for routing, needed for filter() below
+graph = sfn_to_cpprouting(sfn,weight = "quietness")
+```
+
+
+```{r multiroutes-quiet}
+# Let's calculate for n random routes
+set.seed(123)
+n_routes = 1000
+random_routes = tibble(
+  from = sample(nodes$ID, n_routes, replace = TRUE),
+  to = sample(nodes$ID, n_routes, replace = TRUE)
+) |>
+  filter(from != to)
+nrow(random_routes)
+routes = cppRouting::get_path_pair(
+  Graph = graph,
+  from = random_routes$from,
+  to = random_routes$to
+)
+length(routes)
+# Convert to sfnetwork
+routes_osm_ids = purrr::map_dfr(routes, function(route) {
+  routes_sfn = sfn |>
+    activate("nodes") |>
+    filter(ID %in% route) |>
+    activate("edges") |>
+    st_as_sf() |>
+    sf::st_drop_geometry() |>
+    select(osm_id)
+})
+osm_ids_grouped = routes_osm_ids |>
+  group_by(osm_id) |>
+  summarise(n = n())
+osm_drive_n = dplyr::inner_join(
+  osm_drive |>
+    select(osm_id),
+  osm_ids_grouped
+)
+# plot(osm_drive_n["n"], main = "Number of routes per OSM ID")
+# mapview::mapview(osm_drive_n, zcol = "n", lwd = 1)
+```
+
+
+
 
 ```{r setup, eval=FALSE, echo=FALSE}
 usethis::use_readme_rmd()

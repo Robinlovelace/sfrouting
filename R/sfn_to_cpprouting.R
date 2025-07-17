@@ -4,7 +4,9 @@
 #' format that is usable by the `cppRouting` package.
 #'
 #' @param sfn An `sfnetwork` object.
+#' @param weight string, name of column with the weights for routing. if not provided, length is used
 #' @param directed Logical, whether the graph should be directed. Defaults to `FALSE`.
+#'
 #' @return A `cppRouting` graph object.
 #' @export
 #' @examples
@@ -15,7 +17,7 @@
 #'   graph = sfn_to_cpprouting(sfn)
 #' }
 #' }
-sfn_to_cpprouting = function(sfn, directed = FALSE) {
+sfn_to_cpprouting = function(sfn, weight = NULL,  directed = FALSE) {
  
   # Ensure nodes have a unique ID
   sfn = sfn |>
@@ -26,8 +28,10 @@ sfn_to_cpprouting = function(sfn, directed = FALSE) {
   edges_sf = sf::st_as_sf(sfn, "edges")
   
   # Ensure edges have a weight attribute, use length if not present
-  if (!"weight" %in% names(edges_sf)) {
+  if (is.null(weight)) {
     edges_sf$weight = sf::st_length(edges_sf)
+  } else {
+    edges_sf$weight = edges_sf[[weight]]
   }
   
   nodes_coords = sf::st_coordinates(nodes_sf)

@@ -4,10 +4,12 @@
 \alias{sfn_to_cpprouting}
 \title{Convert an sfnetwork object to a cppRouting graph}
 \usage{
-sfn_to_cpprouting(sfn, directed = FALSE)
+sfn_to_cpprouting(sfn, weight = NULL, directed = FALSE)
 }
 \arguments{
 \item{sfn}{An \code{sfnetwork} object.}
+
+\item{weight}{string, name of column with the weights for routing. if not provided, length is used}
 
 \item{directed}{Logical, whether the graph should be directed. Defaults to \code{FALSE}.}
 }
