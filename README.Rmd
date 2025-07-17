@@ -1,5 +1,8 @@
 ---
 output: github_document
+editor:
+  markdown:
+    wrap: sentence
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -161,7 +164,7 @@ n_trips = 1000
 trips = data.frame(
   from = sample(nodes$ID, n_trips, replace = TRUE),
   to = sample(nodes$ID, n_trips, replace = TRUE),
-  demand = round(runif(1, 10, n_trips))
+  demand = round(runif(n_trips, 1, 100))
 )
 aon = cppRouting::get_aon(
   Graph = graph,
@@ -174,8 +177,13 @@ sfn_aon = left_join(
   sfn_edges |>
     mutate(across(from:to, as.character)),
   aon
-)
-plot(sfn_aon["flow"], main = "Flow on edges")
+) |> 
+  mutate(flow = if_else(flow==0,NA_integer_,flow))
+
+plot(sfn_aon[!is.na(sfn_aon$flow), "flow"],
+     main = "Flow on edges",lwd = 1.5,reset = FALSE)
+plot(sfn_aon[is.na(sfn_aon$flow),"geometry"],
+     main = "Flow on edges",add=TRUE,col = "gray70")
 # mapview::mapview(sfn_aon, zcol = "flow", lwd = 2)
 ```
 
@@ -279,5 +287,3 @@ usethis::use_package("zonebuilder", type = "Suggests")
 devtools::build_readme()
 usethis::use_data_raw("sr_data_osm")
 ```
-
-

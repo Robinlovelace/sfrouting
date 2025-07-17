@@ -2,3 +2,5 @@
 ^data-raw$
 ^LICENSE\.md$
 ^\.github$
+^.*\.Rproj$
+^\.Rproj\.user$
